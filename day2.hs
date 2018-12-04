@@ -1,46 +1,34 @@
-import Data.List
+import Data.List (sort)
 
--- Just like words, but with a string of integers instead of words.
-nums:: String -> [Int]
-nums s = sort $ map (\x->read x :: Int) $ words s
+-- Part 1. Find the "checksum"
+reds :: Eq a => Int -> Int -> [a] -> (Int,Int)
+-- Iterate thru, three at a time.
+reds p t (a:b:c:ds)
+  | a /= b && b == c = reds p t (b:c:ds)
+  | a == b && b /= c = reds 1 t (c:ds)
+  | a == b && b == c = reds p 1 ds
+  | a /= b && b /= c = reds p t (c:ds)
+-- Check the last two. (Needed to correct the numbers on my input.)
+reds p t (a:b:cs)
+  | a == b = reds 1 t cs
+  | a /= b = reds p t cs
+reds p t _ = (p, t)
 
-minMax:: [Int] -> (Int, Int) -> (Int, Int)
-minMax (x:xs) (min, max)
-  | x < min = minMax xs (x, max)
-  | x > max = minMax xs (min, x)
-  | x == min && x == max = minMax xs (x,x)
-  | otherwise = minMax xs (min,max)
-minMax [] (min,max) = (min,max)
-
-minMax':: [Int] -> (Int, Int)
-minMax' xs = (head xs, last xs)
-
-diffMinMax:: (Int,Int) -> Int
-diffMinMax (a,b) = abs (a-b)
-
-pairWise':: Int -> [Int] -> [(Int,Int)]
-pairWise' a (x:xs) = (a,x):(pairWise' a xs)
-pairWise' a _      = []
-
-pairWise:: [Int] -> [(Int,Int)]
-pairWise (x:xs) = (pairWise' x xs)++(pairWise xs)
-pairWise []     = []
-
-main =
-  do
-    fileData <- readFile "inputs/day2.input"
-    putStrLn "Part One:"
-    putStrLn $ show $ sum $ map (diffMinMax . minMax') (map nums $ lines fileData) -- array of [Int]'s
-
-    putStrLn "part Two:"
-    -- 1. Make a matrix of [[row1], [row2], ...]
-    -- 2. Map each [rowN]
-    -- 2.1 Filter each [rowN] for pairs that don't divide.
-    putStrLn $ show $ sum $ (map ((\(x,y) -> (quot y x)) . head . filter (\(x,y) -> rem y x == 0) . pairWise) (map nums $ lines fileData))
- --   return $ show numbers
-
---return $ show $ diffMinMax $ minMax row (head row, last row)
+-- Part 2. Find the pair differing by only one place.
+rmdupl :: Eq a => [a] -> [a] -> [a]
+rmdupl s s' = fst $ unzip $ filter (\(a,b) -> if a == b then True else False) $ zip s s'
 
 
+-- To make the pairwise pieces, I'm picturing something like
+-- *Main> take 9 $ zip (cycle [1,2,3]) (cycle [2,3])
+-- [(1,2),(2,3),(3,2),(1,3),(2,2),(3,3),(1,2),(2,3),(3,2)]
 
--- map nums $ lines "hey you\nthere here"
+main = do
+  contents <- readFile "inputs/day2.txt"
+  let codes = lines contents
+  let reduns = map (\s -> reds 0 0 $ sort s) codes
+  let (dubs,trips) =  foldl (\(x,y) (x',y') -> (x+x',y+y')) (0,0) reduns
+  print dubs
+  print trips
+  print $ dubs * trips
+  

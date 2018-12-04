@@ -1,20 +1,35 @@
-import Data.Char
+-- `cycle` creates and endless cycle from a list (perfect for repeat
+-- processing.)
+--
 
-strToInts:: String -> [Int]
-strToInts = map (\x -> (ord x) - 48)
+-- Initial set: (S.fromList [])
+-- Add x: (S.insert x $ s.fromList [])
+-- Check for x: (S.member x $ s.fromList [])
 
-valueIfDup:: Int -> Int -> Int
-valueIfDup a b
-  | a == b = a
-  | a /= b = 0
+-- part 2 setup.
+import qualified Data.IntSet as S
+import Data.IntSet (IntSet)
 
-doPairs:: (Int->Int->Int->Int) -> Int -> [Int] -> Int
-doPairs f acc (x:y:ys) = doPairs f (f acc x y) (y:ys)
-doPairs _ acc [] = acc
-doPairs _ acc [_] = acc
+-- mfw leading '+' breaks read. wthcc??
+read' ('+':xs) = read xs
+read' x        = read x
 
-sumDups:: [Int] -> Int
-sumDups xs = doPairs
-             (\acc x y -> acc + valueIfDup x y)
-             (valueIfDup (head xs) (last xs))
-             xs
+pt2 currentFrequency seen (c:changes) =
+  if S.member nextFrequency seen then
+    nextFrequency
+  else
+    pt2 nextFrequency (S.insert nextFrequency seen) changes
+  where
+    nextFrequency = currentFrequency + c
+  
+
+main = do
+  contents <- readFile "inputs/day1a.txt"
+  let changes = map read' $ lines contents :: [Int]
+
+  -- Part A.
+  print $ sum changes
+
+  -- Part B.
+  print $ pt2 0 (S.fromList []) (cycle changes)
+
