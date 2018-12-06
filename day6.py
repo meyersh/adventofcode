@@ -125,3 +125,13 @@ if False: # print the graph when true.
 
         print ""
             
+
+### PART B
+muh_region = 0 # Area
+dlimit = 10000
+for x in xrange(xbounds[0], xbounds[1]):
+    for y in xrange(ybounds[0], ybounds[1]):
+        if sum(map(lambda c: d((x,y), c), coords)) < dlimit:
+            muh_region += 1
+
+print "The region under %d = %d." % (dlimit, muh_region)
