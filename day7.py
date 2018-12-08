@@ -1,68 +1,89 @@
 #!/usr/bin/python
-
+#
+from pprint import pprint
 import string
 import re
-parsere = re.compile("Step ([A-Z]) must be finished before step ([A-Z]) can begin.")
 
-class Step(object):
-    def __init__(self, step, dependencies):
-        self.step = step
-        self.dependencies = list(dependencies)
-    def addDep(self, dep):
-        self.dependencies.append(dep)
-        self.dependencies = sorted(self.dependencies, reverse=True)
+stepre = re.compile("Step ([A-Z]) must be finished before step ([A-Z]) can begin.")
 
-        
-    def __repr__(self):
-        return "<%s: %s>" % (self.step, str(self.dependencies))
-
-
-first = None
 steps = dict()
-with open("inputs/day7-example.txt") as input:
+ases = set()
+bses = set()
+with open("inputs/day7.txt") as input:
     for line in input.readlines():
-        line = line.rstrip()
-        (a,b) = parsere.match(line).groups()
-        if a in steps:
-            steps[a].addDep(b)
-            print "Adding dep: %s -> %s." % (a,b)
-            print steps[a]
+
+        (a,b) = stepre.match(line).groups()
+
+        ases.add(a)
+        bses.add(b)
+
+        if b not in steps:
+            steps[b] = [a]
         else:
-            steps[a] = Step(a, b)
-        if not first:
-            first = steps[a]  # Mark the starting step.
-
-for c in string.ascii_uppercase:
-    if c not in steps:
-        print "%s is undefined." % c
-        steps[c] = None
-        
-def evaluate(step):
-    progress = list()
-    stack = [step]
-    while stack:
-        current = stack.pop()
-        if current is None: # the last step? Probably, because it is
-                            # never claimed as the predecessor.
-            continue
-
-        # Avoid duplicates in the stack.
-        if not progress or progress[-1] != current.step:
-            progress.append(current.step)
-        
-        stack += [steps[s] for s in current.dependencies]
-        stack = sorted(stack)
-        #print "Current: %s" % str(current)
-        print "Stack: %s" % str(stack)
+            steps[b] = sorted(steps[b] + [a], reverse=True)
 
 
-    return "".join(progress) + steps[progress[-1]].dependencies[0]
+def first():
+    d = ases - bses
+    try:
+        assert len(d) == 1
+    except:
+        print "Set: %s" % str(d)
+    return sorted(list(d))[0]
 
-progress = list()
-print "Steps loaded:"
-for step in steps:
-    if steps[step]:
-        print steps[step]
-print evaluate(first)
+
+def evaluate(steps = steps, f = first()):
+    ready = sorted([f], reverse=True)
+    completed = set([f])
+    progress = []
+    current = f
+    def next():
+        nexts = set()
+        for (k,v) in steps.items():
+            if not v:
+                nexts.add(k)
+        return sorted(list(nexts))
+
+    def whodependson(c):
+        deps = set()
+        for (k,v) in steps.items():
+            if c in v:
+                deps.add(k)
+        return sorted(list(deps), reverse=True)
+
+    def markcompleted(c):
+        for (k,v) in steps.items():
+            if current in v:
+                del steps[k][steps[k].index(current)]
+
+    while steps.keys():
+        markcompleted(current) # mark it done
+        progress.append(current)
+
+
+        pprint(steps)
+
+        ready += whodependson(current)
+        try:
+            current = next()[0]
+        except:
+            pass
+
+        del steps[current]
+
+    progress.append(current)
+
+    return "".join(progress)
+
 correct = "CABDFE"
-print evaluate(first) == correct
+print "Adding first to steps..."
+for s in sorted(list(ases-bses))[1:]:
+    steps[s] = []
+print "Steps:"
+pprint(steps)
+print "First available: %s" % first()
+
+print "Evaluating..."
+r = evaluate(steps)
+print r
+print r==correct
