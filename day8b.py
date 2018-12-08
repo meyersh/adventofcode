@@ -32,22 +32,9 @@ def readnodes(n):
     return readnode(n, 1)
 
 
-    if n[0]:
-        children = readnodes(n[2:-n[1]])
-    else:
-        children = None
-        
-    return {'nchildren':n[0],
-            'nmeta':n[1],
-            'children':children,
-            'meta':n[-n[1]:]}
-
-
 #nodes = readnodes("2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2".split())
 with open("inputs/day8.txt") as inputs:
     nodes = readnodes(inputs.readline().rstrip().split())
-
-
 
 
 def s(nodes):
