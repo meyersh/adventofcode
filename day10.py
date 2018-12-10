@@ -28,7 +28,7 @@ class Node(object):
 
 nodes = list()
 
-with open("inputs/day10-example.txt") as input:
+with open("inputs/day10.txt") as input:
     for line in input.readlines():
         (x, y, velx, vely) = parsere.match(line.rstrip()).groups()
         nodes.append(Node(x,y,velx,vely))
@@ -39,43 +39,66 @@ def bounds(nodes=nodes):
     return (a[0].x, a[0].y), (a[-1].x, a[-1].y)
 
 
+def area(b):
+    """ given a bounds obj, what's the area (x*y) ? """
+    return abs(b[0][0]-b[1][0]) * abs(b[0][1]-b[1][1])
+
+
+def lineyness(nodes = nodes):
+    xs = dict()
+    ys = dict()
+    for node in nodes:
+        if node.x not in xs:
+            xs[node.x] = 0
+
+        if node.y not in ys:
+            ys[node.y] = 0
+
+        xs[node.x] += 1
+        ys[node.y] += 1
+
+    return max(xs.values()) * max(ys.values())
 pprint(nodes)
 
 print bounds()
 
-import wx
+from matplotlib import pyplot as plt
 
-class Cartesian(wx.Frame):
-    def __init__(self, parent=None, id=-1, title=""):
-        wx.Frame.__init__(self, parent, id, title, size=(1200, 1200))
+t=0
 
-        self.panel = wx.Panel(self)
-        self.panel.Bind(wx.EVT_PAINT, self.OnPaint)
+liney = list()
+areas = list()
 
-    def OnPaint(self, event):
-        dc = wx.PaintDC(event.GetEventObject())
-        dc.Clear()
-        dc.SetPen(wx.Pen(wx.BLACK, width=3))
-        #dc.DrawLine(50, 0, 50, 50)
-        #dc.DrawLine(0, 50, 50, 50)
-        t = 0
-        while t < 150:
+def showme(nodes=nodes):
+    for node in nodes:
+        plt.plot(node.x, -node.y, "ob")
 
-            t+=1
-            for node in nodes:
-                dc.SetPen(wx.Pen(wx.WHITE, width=3))
-                dc.DrawPoint((node.x+600),(node.y+600))
+    plt.show()
 
-                node.advanceTime(5)
+while t < 20000:
+    a = area(bounds())
+    aa = bounds()
+    al = lineyness()
+    for node in nodes:
+        node.advanceTime(1)
 
-                dc.SetPen(wx.Pen(wx.BLACK, width=3))
-                dc.DrawPoint((node.x+600),(node.y+600))
+    liney.append(al)
+    areas.append(a)
+    t+=1
 
-            #time.sleep(2)
-            print "Drawing..."
-        print "Done drawing."
+    b = area(bounds())
+    bb =bounds()
+    bl = lineyness()
 
-app = wx.App(False)
-frame = Cartesian()
-frame.Show()
-app.MainLoop()
+    print "%d: %s -> %s = %d"  % (t, str(aa), str(bb), al-bl)
+
+
+for node in nodes:
+    node.advanceTime(-20000)
+    node.advanceTime(liney.index(max(liney)))
+
+showme()
+
+print "Max liney = %d, Min area = %d" % (max(liney), min(areas))
+print "At indexes %d ,   %d. " % (liney.index(max(liney)), areas.index(min(areas)))
+print "Done drawing."
