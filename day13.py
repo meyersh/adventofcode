@@ -143,9 +143,12 @@ def tick(gridy=gridy, verbose=False, stoponcrash=True):
                 gridy[nexty][nextx] = repair(nextx, nexty)
                 gridy[cart.y][cart.x] = repair(cart.x, cart.y)
                 cart.active = False
+                cart.x = nextx
+                cart.y = nexty
                 for othercart in carts:
                     if othercart.x == nextx and othercart.y == nexty:
                         othercart.active = False
+                return True
                         
 
         # Otherwise, move the cart and repair the carts previous
@@ -199,4 +202,5 @@ while len(carts)> 1:
 # NOT 118,104
 # NOT 117,103
 # NOT 119,104...
+# NOT 53,20
 print(carts)
